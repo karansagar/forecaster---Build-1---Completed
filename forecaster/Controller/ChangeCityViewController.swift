@@ -10,13 +10,12 @@ import UIKit
 
 class ChangeCityViewController: UIViewController {
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
+    
+    @IBOutlet weak var changeCityTextField: UITextField!
+    
+    @IBAction func getWeatherButtonPressed(_ sender: UIButton) {
     }
     
-
     /*
     // MARK: - Navigation
 
@@ -26,5 +25,7 @@ class ChangeCityViewController: UIViewController {
         // Pass the selected object to the new view controller.
     }
     */
-
+    @IBAction func backButtonPressed(_ sender: UIButton) {
+    }
+    
 }
