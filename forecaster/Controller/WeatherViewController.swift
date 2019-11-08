@@ -20,9 +20,8 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate {
     let APP_ID = "1cd200cd6e6f7012adbbcba1768b63a7"
     
     //TODO: Declare instance variables here
-    
-
     let locationManager = CLLocationManager()
+    let weatherDataModel = WeatherDataModel()
     
     
     // linked IBOutlets
@@ -47,10 +46,6 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate {
         
         //Start Updating Location. it's aSync Method and works in background
         locationManager.startUpdatingLocation()
-        
-        
-        
-        
     }
     
 
@@ -69,18 +64,53 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate {
      /***************************************************************/
      
      //Write the getWeatherData method here:
-     
+     // ASync Method -
+    
+    func getWeatherData(url: String, paramerters: [String: String]) {
+        
+        Alamofire.request(url, method: .get, parameters: paramerters).responseJSON {
+            response in
+            if response.result.isSuccess {
+                print("Sucess Got the weather Data")
+                
+                // now what next is here
+                //creating new constant that's the JSON ;
+                let weatherJSON: JSON = JSON(response.result.value!)
+                print(weatherJSON)
+                self.updateWeatherData(json: weatherJSON)
+                
+            } else {
+                print("Error \(String(describing: response.result.error))")
+                self.cityLabel.text = "Connection Issues"
+                
+            }
+        }
+        
+    }
 
-     
-     
-     
-     
      
      //MARK: - JSON Parsing
      /***************************************************************/
     
      
      //Write the updateWeatherData method here:
+    func updateWeatherData(json: JSON) {
+        
+        if let tempResults = json["main"] ["temp"].double {
+        weatherDataModel.temperature = Int(tempResults - 273.15)
+        
+        weatherDataModel.city = json["name"].stringValue
+        
+        weatherDataModel.condition = json["weather"] [0] ["id"].intValue
+   
+        weatherDataModel.weatherIcon = weatherDataModel.updateWeatherIcon(condition: weatherDataModel.condition)
+            
+            updateUIwithWeatherData()
+            
+        } else {
+            cityLabel.text = "Weather Unavailable"
+        }
+    }
      
 
      
@@ -92,7 +122,11 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate {
      
      //Write the updateUIWithWeatherData method here:
      
-     
+    func updateUIwithWeatherData() {
+        cityLabel.text = weatherDataModel.city
+        temperatureLabel.text = String(weatherDataModel.temperature) + "º"
+        weatherIcon.image = UIImage(named: weatherDataModel.weatherIcon)
+    }
      
      
      
@@ -116,6 +150,9 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate {
             
             //combine in to dictionary
             let params: [String : String] = ["lat": latitude, "lon": longitude, "appid": APP_ID]
+            
+            //Call getWeatherData Func
+            getWeatherData(url: WEATHER_URL, paramerters: params)
             
         }
         
