@@ -8,13 +8,32 @@
 
 import UIKit
 
+protocol ChangeCityDelegate {
+    func userEnteredNewCityName(city: String)
+}
+
 class ChangeCityViewController: UIViewController {
 
     
     @IBOutlet weak var changeCityTextField: UITextField!
     
     @IBAction func getWeatherButtonPressed(_ sender: UIButton) {
+    
+        //get the city name user entered
+        let cityName = changeCityTextField.text!
+        
+        //if we entered a delegate set, call the method userentered new city name
+        delegate?.userEnteredNewCityName(city: cityName)
+        
+        //Dismiss the change city viewController
+        dismiss(animated: true, completion: nil)
     }
+   
+    
+    
+    //Declare the Delegare Variable here:-
+    var delegate: ChangeCityDelegate?
+    
     
     /*
     // MARK: - Navigation
@@ -26,6 +45,7 @@ class ChangeCityViewController: UIViewController {
     }
     */
     @IBAction func backButtonPressed(_ sender: UIButton) {
+        dismiss(animated: true, completion: nil)
     }
     
 }

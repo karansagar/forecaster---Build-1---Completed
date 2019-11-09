@@ -4,16 +4,15 @@
 //
 //  Created by Karan Sagar on 03/11/19.
 //  Copyright © 2019 Karan. All rights reserved.
-//
+
 
 import UIKit
 import CoreLocation
 import SwiftyJSON
 import Alamofire
 
-
-class WeatherViewController: UIViewController, CLLocationManagerDelegate {
-
+class WeatherViewController: UIViewController, CLLocationManagerDelegate, ChangeCityDelegate {
+    
     
     //Constants
     let WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather"
@@ -23,18 +22,17 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate {
     let locationManager = CLLocationManager()
     let weatherDataModel = WeatherDataModel()
     
-    
     // linked IBOutlets
     
     @IBOutlet weak var weatherIcon: UIImageView!
     @IBOutlet weak var temperatureLabel: UILabel!
     @IBOutlet weak var cityLabel: UILabel!
+    @IBOutlet weak var segmentOutlet: UISegmentedControl!
     
-
     override func viewDidLoad() {
         super.viewDidLoad()
-
-    //TODO:Set up the location manager here.
+        
+        //TODO:Set up the location manager here.
         
         locationManager.delegate = self // our current class ie. weather view controller
         
@@ -48,23 +46,22 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate {
         locationManager.startUpdatingLocation()
     }
     
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
     
+    /*
+     // MARK: - Navigation
+     
+     // In a storyboard-based application, you will often want to do a little preparation before navigation
+     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+     // Get the new view controller using segue.destination.
+     // Pass the selected object to the new view controller.
+     }
+     */
     
     //MARK: - Networking
-     /***************************************************************/
-     
-     //Write the getWeatherData method here:
-     // ASync Method -
+    /***************************************************************/
+    
+    //Write the getWeatherData method here:
+    // ASync Method -
     
     func getWeatherData(url: String, paramerters: [String: String]) {
         
@@ -82,28 +79,25 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate {
             } else {
                 print("Error \(String(describing: response.result.error))")
                 self.cityLabel.text = "Connection Issues"
-                
             }
         }
-        
     }
-
-     
-     //MARK: - JSON Parsing
-     /***************************************************************/
     
-     
-     //Write the updateWeatherData method here:
+    //MARK: - JSON Parsing
+    /***************************************************************/
+    
+    
+    //Write the updateWeatherData method here:
     func updateWeatherData(json: JSON) {
         
         if let tempResults = json["main"] ["temp"].double {
-        weatherDataModel.temperature = Int(tempResults - 273.15)
-        
-        weatherDataModel.city = json["name"].stringValue
-        
-        weatherDataModel.condition = json["weather"] [0] ["id"].intValue
-   
-        weatherDataModel.weatherIcon = weatherDataModel.updateWeatherIcon(condition: weatherDataModel.condition)
+            weatherDataModel.temperature = Int(tempResults - 273.15)
+            
+            weatherDataModel.city = json["name"].stringValue
+            
+            weatherDataModel.condition = json["weather"] [0] ["id"].intValue
+            
+            weatherDataModel.weatherIcon = weatherDataModel.updateWeatherIcon(condition: weatherDataModel.condition)
             
             updateUIwithWeatherData()
             
@@ -111,31 +105,42 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate {
             cityLabel.text = "Weather Unavailable"
         }
     }
-     
-
-     
-     
-     
-     //MARK: - UI Updates
-     /***************************************************************/
-     
-     
-     //Write the updateUIWithWeatherData method here:
-     
+    
+    
+    //MARK: - UI Updates
+    /***************************************************************/
+    
+    
+    //Write the updateUIWithWeatherData method here:
+    
     func updateUIwithWeatherData() {
         cityLabel.text = weatherDataModel.city
         temperatureLabel.text = String(weatherDataModel.temperature) + "º"
         weatherIcon.image = UIImage(named: weatherDataModel.weatherIcon)
+        
+        
     }
-     
-     
-     
-     
-     //MARK: - Location Manager Delegate Methods
-     /***************************************************************/
-     
-     
-     //Write the didUpdateLocations method here:
+    
+    //Segment Control
+    @IBAction func tempCorF(_ sender: UISegmentedControl) {
+        
+        switch segmentOutlet.selectedSegmentIndex {
+        case 0:
+            temperatureLabel.text = String(weatherDataModel.temperature) + "ºC"
+        case 1:
+            temperatureLabel.text = String((weatherDataModel.temperature * 9/5) + 32) + "ºF"
+            
+        default:
+            break
+        }
+        
+    }
+    
+    //MARK: - Location Manager Delegate Methods
+    /***************************************************************/
+    
+    
+    //Write the didUpdateLocations method here:
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         
@@ -157,27 +162,41 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate {
         }
         
     }
-     
-     
-     
-     //Write the didFailWithError method here:
+    
+    
+    
+    //Write the didFailWithError method here:
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("Error \(error)")
         cityLabel.text = "Location Unavailable"
     }
-     
-     
-
-     
-     //MARK: - Change City Delegate methods
-     /***************************************************************/
-     
-     
-     //Write the userEnteredANewCityName Delegate method here:
-     
-
-     
-     //Write the PrepareForSegue Method here
-     
-
+    
+    
+    
+    
+    //MARK: - Change City Delegate methods
+    /***************************************************************/
+    
+    
+    
+    //Write the userEnteredANewCityName Delegate method here:
+    
+    func userEnteredNewCityName(city: String) {
+        print(city)
+        
+        let params : [String: String] = ["q": city, "appid": APP_ID]
+        getWeatherData(url: WEATHER_URL, paramerters: params)
+    }
+    
+    
+    
+    //Write the PrepareForSegue Method here
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "ChangeCityName" {
+            let destination = segue.destination as! ChangeCityViewController
+            destination.delegate = self
+            
+        }
+    }
+    
 }
